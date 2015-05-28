@@ -25,6 +25,10 @@ game.info$date
 summary(game.info)
 head(game.info$playbyplay)
 
+game.info$playbyplay[[:3,4]]
+
+summary(game.info$playbyplay)
+
 head(game.info$playbyplay['etype'])
 distinct(game.info$playbyplay['etype'])
 
