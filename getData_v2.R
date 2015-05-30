@@ -14,6 +14,13 @@ library(tidyr)
 # set the season to grab data for
 theSeason <- '20142015'
 
+# import the pool member to player look up table
+# i create this in excel from Dean's pool file
+members <- read.table("poolmember_lkp.txt", sep="\t", header = TRUE, stringsAsFactors = FALSE,
+                      strip.white = TRUE)
+members <- rename(members, playername = PLAYER_NAME)
+head(members)
+str(members)
 
 # start the process to get data using nhlscrapr
 # full.game.database creates a table with all available games
@@ -24,7 +31,12 @@ summary(all.games)
 head(filter(all.games, season==theSeason, session=='Playoffs'))
 
 # grab just the 2014/2015 playoff games
-temp <- filter(all.games, season==theSeason, session=='Playoffs')
+playoffgames <- filter(all.games, season==theSeason, session=='Playoffs')
+
+#### only run this when grabbing new games
+#### will need to figure out how to only get the new games
+# compile.all.games(new.game.table=playoffgames)
+####
 
 # keep only the downloaded info with the word processed in it
 a1 <- dir(nhldata)
@@ -34,10 +46,10 @@ theFiles <- a1[ grepl("processed", a1) ]
 nGames <- length(theFiles)
 
 # put all this into a function that you use lapply on based on nGames
-load(paste0(nhldata,theFiles[1]))
+load(paste0(nhldata,theFiles[2]))
 
 summary(game.info)
-game.info$score
+game.info$teams
 goaldata <- filter(game.info$playbyplay, etype=='GOAL')
 
 # keep only the relevant fields
@@ -66,10 +78,18 @@ t3 <- mutate(t2, tot_pts = goals*2+assists.x+assists.y)
 head(t3)
 
 # split the player number and name into 2 fields in order to match to lookup
-strsplit(t3$player, " ")
+t4 <- mutate(t3, playernum = gsub(" .*$", "", player), 
+             playername = substr(player, regexec(" ", player)[[1]][1]+1, nchar(player)))
+
+t4
 
 # clean up and keep just the fields you need for the viz
-ptsTable <- select(t3, refdate, team, player, tot_pts)
+ptsTable <- select(t4, refdate, team, playernum, playername, tot_pts)
+ptsTable
 
-# create a table with player names and pool member
+# join ptsTable with members table to get points by member
+x1 <- select(ptsTable, playername)
 
+t5 <- merge(ptsTable, members, by="playername")
+
+group_by(t5, refdate, POOL_MEMBER) %>% summarise(sum(tot_pts))
