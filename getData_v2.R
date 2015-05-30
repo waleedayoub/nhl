@@ -92,4 +92,6 @@ x1 <- select(ptsTable, playername)
 
 t5 <- merge(ptsTable, members, by="playername")
 
-group_by(t5, refdate, POOL_MEMBER) %>% summarise(sum(tot_pts))
+t6 <- group_by(t5, refdate, POOL_MEMBER) %>% summarise(POINTS = sum(tot_pts))
+t6
+ggplot(t6, aes(x=refdate, y=POINTS)) + geom_line() + geom_point()
