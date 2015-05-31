@@ -1,9 +1,11 @@
 # set working directory
 # need to figure out how to make this system agnostic
 # will load all this to a shinyapps account anyway...
+# os x dir location
+nhldir1 <- '/Users/waleed/development/R/nhl/'
 nhldir <- './'
-nhldata <- paste0(nhldir, 'nhlr-data/')
-setwd(nhldir)
+nhldata <- paste0(nhldir1, 'nhlr-data/')
+setwd(nhldir1)
 
 # load libraries
 library(nhlscrapr)
@@ -46,6 +48,15 @@ theFiles <- a1[ grepl("processed", a1) ]
 nGames <- length(theFiles)
 
 # put all this into a function that you use lapply on based on nGames
+
+for(i in 1:3) {
+  load(paste0(nhldata,theFiles[i]))
+  print(game.info$teams)
+  print(game.info$score)
+
+  
+}
+
 load(paste0(nhldata,theFiles[2]))
 
 summary(game.info)
@@ -75,23 +86,19 @@ t2 <- merge(test, t1, by=mergevars, all=TRUE)
 # now calculate the tot_pts field
 t2[is.na(t2)] <- 0
 t3 <- mutate(t2, tot_pts = goals*2+assists.x+assists.y)
-head(t3)
 
 # split the player number and name into 2 fields in order to match to lookup
 t4 <- mutate(t3, playernum = gsub(" .*$", "", player), 
              playername = substr(player, regexec(" ", player)[[1]][1]+1, nchar(player)))
 
-t4
-
 # clean up and keep just the fields you need for the viz
 ptsTable <- select(t4, refdate, team, playernum, playername, tot_pts)
-ptsTable
 
 # join ptsTable with members table to get points by member
-x1 <- select(ptsTable, playername)
-
 t5 <- merge(ptsTable, members, by="playername")
-
 t6 <- group_by(t5, refdate, POOL_MEMBER) %>% summarise(POINTS = sum(tot_pts))
-t6
+
+ptsMember <- merge(ptsMember, t6, by=POOL_MEMBER, all=TRUE)
+ptsMember <- group_by(ptsMember, POOL_MEMBER) %>% summarise(POINTS = sum(POINTS))
+# ptsMember is the final table we need to add to and then plot
 ggplot(t6, aes(x=refdate, y=POINTS)) + geom_line() + geom_point()
