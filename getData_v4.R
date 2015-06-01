@@ -1,20 +1,52 @@
-library(shiny)
-# load the other libraries
+# set working directory
+# need to figure out how to make this system agnostic
+# will load all this to a shinyapps account anyway...
+# os x dir location
+nhldir1 <- '/Users/waleed/development/R/nhl/'
+nhldir <- './'
+nhldata <- paste0(nhldir1, 'nhlr-data/')
+setwd(nhldir1)
+
+# load libraries
 library(nhlscrapr)
 library(dplyr)
 library(ggplot2)
 library(stringi)
 library(tidyr)
 library(lubridate)
+# set the season to grab data for
+theSeason <- '20142015'
 
-# load the pool member data
+# import the pool member to player look up table
+# i create this in excel from Dean's pool file
 members <- read.table("poolmember_lkp.txt", sep="\t", header = TRUE, stringsAsFactors = FALSE,
                       strip.white = TRUE)
 members <- rename(members, playername = PLAYER_NAME)
+head(members)
+str(members)
 
-# load the nhl data
-load('nhlscrapr-20142015.RData')
-load('nhlscrapr-core.RData')
+# start the process to get data using nhlscrapr
+# full.game.database creates a table with all available games
+all.games <- full.game.database()
+table(all.games$season,all.games$session)
+
+summary(all.games)
+head(filter(all.games, season==theSeason, session=='Playoffs'))
+
+# grab just the 2014/2015 playoff games
+playoffgames <- filter(all.games, season==theSeason, session=='Playoffs')
+
+#### only run this when grabbing new games
+#### will need to figure out how to only get the new games
+# compile.all.games(new.game.table=playoffgames)
+####
+
+# keep only the downloaded info with the word processed in it
+
+# put all this into a function that you use lapply on based on nGames
+
+load('./source-data/nhlscrapr-20142015.RData')
+load('./source-data/nhlscrapr-core.RData')
 
 goaldata <- filter(grand.data, etype=='GOAL')
 head(roster.master)
@@ -67,14 +99,6 @@ z1 <- group_by(z, date, POOL_MEMBER) %>%
 z3 <- group_by(z1, POOL_MEMBER) %>%
   mutate(cumpts = cumsum(totpoints))
 
-# Define a server for the Shiny app
-shinyServer(function(input, output) {
-  
-  # Fill in the spot we created for a plot
-  output$ptsDatePlot <- renderPlot({
-    
-    # Render a barplot
-    ggplot(z3, aes(x=date, y=cumpts)) + ylab("Points") + geom_line(aes(colour=POOL_MEMBER))
-    
-  })
-})
+write.csv(x=z3, file = "./shinyapps/data.csv")
+# ptsMember is the final table we need to add to and then plot
+ggplot(z3, aes(x=date, y=cumpts)) + ylab("Points") + geom_line(aes(colour=POOL_MEMBER))

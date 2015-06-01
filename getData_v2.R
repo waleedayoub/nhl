@@ -49,17 +49,17 @@ nGames <- length(theFiles)
 
 # put all this into a function that you use lapply on based on nGames
 
-for(i in 1:3) {
+for(i in 1:nGames) {
   load(paste0(nhldata,theFiles[i]))
   print(game.info$teams)
   print(game.info$score)
-
-  
 }
 
 load(paste0(nhldata,theFiles[2]))
 
-summary(game.info)
+distinct(game.info$playbyplay['etype'])
+
+summary(game.info$playbyplay)
 game.info$teams
 goaldata <- filter(game.info$playbyplay, etype=='GOAL')
 
@@ -97,7 +97,7 @@ ptsTable <- select(t4, refdate, team, playernum, playername, tot_pts)
 # join ptsTable with members table to get points by member
 t5 <- merge(ptsTable, members, by="playername")
 t6 <- group_by(t5, refdate, POOL_MEMBER) %>% summarise(POINTS = sum(tot_pts))
-
+t6
 ptsMember <- merge(ptsMember, t6, by=POOL_MEMBER, all=TRUE)
 ptsMember <- group_by(ptsMember, POOL_MEMBER) %>% summarise(POINTS = sum(POINTS))
 # ptsMember is the final table we need to add to and then plot
