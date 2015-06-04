@@ -2,11 +2,13 @@
 # need to figure out how to make this system agnostic
 # will load all this to a shinyapps account anyway...
 # os x dir location
-nhldir1 <- '/Users/waleed/development/R/nhl/'
+nhldir <- '/Users/waleed/development/R/nhl/'
+# otherwise use this location
 nhldir <- './'
-nhldata <- paste0(nhldir1, 'nhlr-data/')
-sourcedata <- paste0(nhldir1, 'source-data/')
-setwd(nhldir1)
+setwd(nhldir)
+
+databyGame <- paste0(nhldir1, 'nhlr-data/')
+dataAll <- paste0(nhldir1, 'source-data/')
 
 # load libraries
 library(nhlscrapr)
@@ -31,15 +33,22 @@ theSeason <- '20142015'
 
 # full.game.database creates a table with all available games
 all.games <- full.game.database()
-table(all.games$season,all.games$session)
-
-summary(all.games)
-head(filter(all.games, season==theSeason, session=='Playoffs'))
+table(all.games$season)
 
 # grab just the 2014/2015 playoff games
 playoffgames <- filter(all.games, season==theSeason, session=='Playoffs')
-distinct(playoffgames, gcode) %>% select(gcode)
+gcodesALL <- distinct(playoffgames, gcode) %>% select(gcode, status)
+gcodesALL
+
+load('./source-data/nhlscrapr-20142015.RData')
+load('./source-data/nhlscrapr-core.RData')
+
 # get the list of downloaded gcodes from the working dir
+gcodesPRE <- distinct(grand.data, gcode) %>% select(gcode)
+
+# get the list of gcodes we still need -- how to account for games that didn't happen???
+gcodesNEW <- anti_join(gcodesALL, gcodesPRE, by='gcode') %>% select(gcode)
+gcodesNEW[1]
 
 #### only run this when grabbing new games
 #### will need to figure out how to only get the new games
@@ -51,8 +60,6 @@ compile.all.games(rdata.folder = nhldata, output.folder = sourcedata, new.game.t
 
 # put all this into a function that you use lapply on based on nGames
 
-load('./source-data/nhlscrapr-20142015.RData')
-load('./source-data/nhlscrapr-core.RData')
 
 goaldata <- filter(grand.data, etype=='GOAL')
 head(roster.master)
@@ -62,25 +69,24 @@ head(goaldata)
 fields <- c('refdate','ev.team','ev.player.1','ev.player.2','ev.player.3')
 goaldata <- goaldata[fields]
 
-goals <- goaldata %>% left_join(roster.master, c("ev.player.1"="player.id"))
-
-goalsPlayer <- group_by(goals, refdate, firstlast) %>% 
+# filter goals and assists from the multiple columns
+# create a master table with player, date and points accumulated
+goalsPlayer <- left_join(roster.master, c("ev.player.1"="player.id")) %>%
+  group_by(refdate, firstlast) %>% 
   summarise(goals=n()) %>%
   arrange(desc(goals)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
   select(date, playername, goals)
 
-assists1 <- goaldata %>% left_join(roster.master, c("ev.player.2"="player.id"))
-
-a1Player <- group_by(assists1, refdate, firstlast) %>% 
+a1Player <- left_join(roster.master, c("ev.player.2"="player.id")) %>%
+  group_by(refdate, firstlast) %>% 
   summarise(assists1=n()) %>%
   arrange(desc(assists1)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
   select(date, playername, assists1)
 
-assists2 <- goaldata %>% left_join(roster.master, c("ev.player.3"="player.id"))
-
-a2Player <- group_by(assists2, refdate, firstlast) %>% 
+a2Player <- left_join(roster.master, c("ev.player.3"="player.id")) %>%
+  group_by(refdate, firstlast) %>% 
   summarise(assists2=n()) %>%
   arrange(desc(assists2)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
