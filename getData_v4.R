@@ -5,6 +5,7 @@
 nhldir1 <- '/Users/waleed/development/R/nhl/'
 nhldir <- './'
 nhldata <- paste0(nhldir1, 'nhlr-data/')
+sourcedata <- paste0(nhldir1, 'source-data/')
 setwd(nhldir1)
 
 # load libraries
@@ -14,8 +15,6 @@ library(ggplot2)
 library(stringi)
 library(tidyr)
 library(lubridate)
-# set the season to grab data for
-theSeason <- '20142015'
 
 # import the pool member to player look up table
 # i create this in excel from Dean's pool file
@@ -26,6 +25,10 @@ head(members)
 str(members)
 
 # start the process to get data using nhlscrapr
+
+# set the season to grab data for
+theSeason <- '20142015'
+
 # full.game.database creates a table with all available games
 all.games <- full.game.database()
 table(all.games$season,all.games$session)
@@ -35,10 +38,13 @@ head(filter(all.games, season==theSeason, session=='Playoffs'))
 
 # grab just the 2014/2015 playoff games
 playoffgames <- filter(all.games, season==theSeason, session=='Playoffs')
+distinct(playoffgames, gcode) %>% select(gcode)
+# get the list of downloaded gcodes from the working dir
 
 #### only run this when grabbing new games
 #### will need to figure out how to only get the new games
-# compile.all.games(new.game.table=playoffgames)
+compile.all.games(rdata.folder = nhldata, output.folder = sourcedata, new.game.table=playoffgames)
+
 ####
 
 # keep only the downloaded info with the word processed in it
