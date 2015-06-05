@@ -52,7 +52,7 @@ gcodesNEW[1]
 
 #### only run this when grabbing new games
 #### will need to figure out how to only get the new games
-compile.all.games(rdata.folder = nhldata, output.folder = sourcedata, new.game.table=playoffgames)
+# compile.all.games(rdata.folder = nhldata, output.folder = sourcedata, new.game.table=playoffgames)
 
 ####
 
@@ -69,12 +69,17 @@ head(goaldata)
 fields <- c('refdate','ev.team','ev.player.1','ev.player.2','ev.player.3')
 goaldata <- goaldata[fields]
 
+<<<<<<< HEAD
 # filter goals and assists from the multiple columns
 # create a master table with player, date and points accumulated
 goalsPlayer <- left_join(roster.master, c("ev.player.1"="player.id")) %>%
+=======
+# get player names into the tables and summarise goals and assists
+# by date and by player
+goalsPlayer <- left_join(goaldata, roster.master, c("ev.player.1"="player.id")) %>%
+>>>>>>> master
   group_by(refdate, firstlast) %>% 
   summarise(goals=n()) %>%
-  arrange(desc(goals)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
   select(date, playername, goals)
 
