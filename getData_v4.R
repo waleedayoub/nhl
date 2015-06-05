@@ -43,7 +43,7 @@ distinct(playoffgames, gcode) %>% select(gcode)
 
 #### only run this when grabbing new games
 #### will need to figure out how to only get the new games
-compile.all.games(rdata.folder = nhldata, output.folder = sourcedata, new.game.table=playoffgames)
+# compile.all.games(rdata.folder = nhldata, output.folder = sourcedata, new.game.table=playoffgames)
 
 ####
 
@@ -62,25 +62,23 @@ head(goaldata)
 fields <- c('refdate','ev.team','ev.player.1','ev.player.2','ev.player.3')
 goaldata <- goaldata[fields]
 
-goals <- goaldata %>% left_join(roster.master, c("ev.player.1"="player.id"))
-
-goalsPlayer <- group_by(goals, refdate, firstlast) %>% 
+# get player names into the tables and summarise goals and assists
+# by date and by player
+goalsPlayer <- left_join(goaldata, roster.master, c("ev.player.1"="player.id")) %>%
+  group_by(refdate, firstlast) %>% 
   summarise(goals=n()) %>%
-  arrange(desc(goals)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
   select(date, playername, goals)
 
-assists1 <- goaldata %>% left_join(roster.master, c("ev.player.2"="player.id"))
-
-a1Player <- group_by(assists1, refdate, firstlast) %>% 
+a1Player <- left_join(roster.master, c("ev.player.2"="player.id")) %>%
+  group_by(refdate, firstlast) %>% 
   summarise(assists1=n()) %>%
   arrange(desc(assists1)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
   select(date, playername, assists1)
 
-assists2 <- goaldata %>% left_join(roster.master, c("ev.player.3"="player.id"))
-
-a2Player <- group_by(assists2, refdate, firstlast) %>% 
+a2Player <- left_join(roster.master, c("ev.player.3"="player.id")) %>%
+  group_by(refdate, firstlast) %>% 
   summarise(assists2=n()) %>%
   arrange(desc(assists2)) %>% 
   mutate(playername=firstlast, date=mdy("Jan 1 2001")+days(refdate)) %>%
