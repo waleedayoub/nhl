@@ -1,0 +1,8 @@
+name: HockeyPool
+account: waleed
+server: shinyapps.io
+bundleId: 199087
+url: https://waleed.shinyapps.io/HockeyPool
+when: 1433723476.42327
+asMultiple: FALSE
+asStatic: FALSE

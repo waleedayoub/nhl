@@ -12,13 +12,18 @@ shinyUI(
     
     # Give the page a title
     titlePanel("Pool Performance by Date"),
-
-      
+    
+    sidebarLayout(
+      sidebarPanel(
+        h4("Pool Standings"),
+        tableOutput("ptsTable")
+      ),
       # Create a spot for the barplot
       mainPanel(
+        h4("Cumulative Points by Date"),
         plotOutput("ptsDatePlot")  
       )
-      
+    )      
 
   )
 )

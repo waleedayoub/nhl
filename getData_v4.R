@@ -17,7 +17,7 @@ library(ggplot2)
 library(stringi)
 library(tidyr)
 library(lubridate)
-
+library(scales)
 # import the pool member to player look up table
 # i create this in excel from Dean's pool file
 members <- read.table("poolmember_lkp.txt", sep="\t", header = TRUE, stringsAsFactors = FALSE,
@@ -106,18 +106,16 @@ ptsPlayer[is.na(ptsPlayer)] <- 0
 # add up stuff to get points
 x <- mutate(ptsPlayer, points = goals*2+assists1+assists2)
 
-y <- group_by(x, playername) %>% summarise(totpts=sum(points)) %>% arrange(desc(totpts))
-
 # join ptsTable with members table to get points by member
 z <- merge(x, members, by="playername")
 
-z1 <- group_by(z, date, POOL_MEMBER) %>% 
-  summarise(totpoints = sum(points))
+cumPts <- group_by(z, date, POOL_MEMBER) %>% summarise(goals=sum(goals), assists=sum(assists1,assists2), points = sum(points)) %>%
+  group_by(POOL_MEMBER) %>% mutate(cumpts = cumsum(points))
 
-z3 <- group_by(z1, POOL_MEMBER) %>%
-  mutate(cumpts = cumsum(totpoints))
-
+head(cumPts, n=20)
 # ptsMember is the final table we need to add to and then plot
-ggplot(z3, aes(x=date, y=cumpts)) + ylab("Points") + geom_line(aes(colour=POOL_MEMBER))
+cumPts$date <- as.Date(cumPts$date)
+ggplot(cumPts, aes(x=date, y=cumpts)) + ylab("Points") + geom_line(aes(colour=POOL_MEMBER)) + 
+  scale_x_date(breaks="5 days", labels=date_format("%m/%d"))
 
-saveRDS(z3, file='./shinyapps/ptsDatabyDate.rds')
+saveRDS(cumPts, file='./shinyapps/ptsDatabyDate.rds')
