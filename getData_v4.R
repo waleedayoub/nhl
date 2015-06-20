@@ -50,10 +50,11 @@ gcodesPRE <- distinct(grand.data, gcode) %>% select(gcode)
 gcodesNEW <- anti_join(gcodesALL, gcodesPRE, by='gcode') %>% select(gcode)
 
 new.games <- inner_join(playoffgames, gcodesNEW, by='gcode')
+latestgame <- filter(new.games, gcode==30416)
 
 #### only run this when grabbing new games
 #### will need to figure out how to only get the new games
-compile.all.games(rdata.folder = databyGame, output.folder = dataAll, new.game.table=new.games)
+compile.all.games(rdata.folder = databyGame, output.folder = dataAll, new.game.table=playoffgames)
 
 load('./source-data/nhlscrapr-20142015.RData')
 load('./source-data/nhlscrapr-core.RData')
@@ -112,10 +113,12 @@ z <- merge(x, members, by="playername")
 cumPts <- group_by(z, date, POOL_MEMBER) %>% summarise(goals=sum(goals), assists=sum(assists1,assists2), points = sum(points)) %>%
   group_by(POOL_MEMBER) %>% mutate(cumpts = cumsum(points))
 
-head(cumPts, n=20)
+tail(cumPts, n=20)
 # ptsMember is the final table we need to add to and then plot
 cumPts$date <- as.Date(cumPts$date)
 ggplot(cumPts, aes(x=date, y=cumpts)) + ylab("Points") + geom_line(aes(colour=POOL_MEMBER)) + 
   scale_x_date(breaks="5 days", labels=date_format("%m/%d"))
+
+saveRDS(cumPts, file='./shinyapps/ptsDatabyDate.rds')
 
 saveRDS(cumPts, file='./shinyapps/ptsDatabyDate.rds')

@@ -1,0 +1,30 @@
+stats to add:
+  
+- games played - create pool member to team lookup and count team appearances
+- goals (easy) - have it
+- assists (easy) - have it
+- points per game - easy if 1 is done
+
+- points per game of remaining players
+- n of players remaining
+
+remaining teams -
+  need a list of team tuples based on having the same gcode
+
+
+create an algorithm that picks the optimal team based on how the selection process works
+rank players from most points to least points and assume when given a turn, each particpant picks
+the next best point getting player
+
+then build a model that optimizes the players chosen based on other features:
+  - some of those features would player based (points, goals, games played)
+  - other features would be team based (likelihood to do well in the playoffs)
+
+then compare the 2
+if you allow a weighting for player vs team, then you get a comparison between -
+  concentric: picking teams with odds of winning and working back
+  contrarian: focusing on one team that most others ignore
+  balanced: more teams based on early success
+  
+use this:
+  http://people.stat.sfu.ca/~tim/papers/hockey.pdf
